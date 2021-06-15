@@ -46,14 +46,14 @@ const ITEMS_2 = [
       body: "Short and predisposed to bark bark bark bark!"),
 ];
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+const SUPER_ITEMS = [
+  ITEMS_1,
+  ITEMS_2,
+];
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+class _MyHomePageState extends State<MyHomePage> {
+  int? _selectedIndex;
+  int _selectedSuperIndex = 0;
 
   Widget _getDrawerContents() {
     return ListView(
@@ -68,28 +68,53 @@ class _MyHomePageState extends State<MyHomePage> {
         ListTile(
           title: Text('Item 1'),
           onTap: () {
-            Navigator.pop(context);
+            setState(() {
+              _selectedSuperIndex = 0;
+            });
           },
         ),
         ListTile(
           title: Text('Item 2'),
           onTap: () {
-            Navigator.pop(context);
+            setState(() {
+              _selectedSuperIndex = 1;
+            });
           },
         ),
       ],
     );
   }
 
-  Widget _getListView(List<Item> items) {
-    List<Widget> widgets = items
-        .map((Item i) => ListTile(
-              title: Text(i.title),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ))
-        .toList();
+  Widget _getDetailView() {
+    return Center(
+        child: Container(
+      color: Colors.blue,
+      child: Text("Detail", style: TextStyle(fontSize: 72)),
+      width: 200,
+      height: 200,
+    ));
+  }
+
+  Widget _getListView(BuildContext context, List<Item> items) {
+    Size screenSize = MediaQuery.of(context).size;
+
+    List<Widget> widgets = [];
+    for (int i = 0; i < items.length; i++) {
+      widgets.add(ListTile(
+          title: Text(items[i].title),
+          onTap: () {
+            setState(() {
+              _selectedIndex = i;
+              if (screenSize.width <= 500) {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            Scaffold(body: _getDetailView())));
+              }
+            });
+          }));
+    }
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -103,22 +128,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     List<Widget> bodyChildren = [
       Expanded(
-        child: _getListView(ITEMS_1),
+        child: _getListView(context, ITEMS_1),
       ),
     ];
 
-    print(screenSize);
     if (screenSize.width > 500) {
       bodyChildren.add(
-        Expanded(
-          child: Center(
-              child: Container(
-            color: Colors.blue,
-            child: Text("Detail", style: TextStyle(fontSize: 72)),
-            width: 200,
-            height: 200,
-          )),
-        ),
+        Expanded(child: _getDetailView()),
       );
     }
 
@@ -132,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     return Scaffold(
-      appBar: screenSize.width > 400
+      appBar: screenSize.width > 800
           ? null
           : AppBar(
               title: Text(widget.title),
@@ -140,11 +156,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Row(
         children: bodyChildren,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
       drawer: Drawer(child: _getDrawerContents()),
     );
   }
